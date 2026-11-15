@@ -38,9 +38,9 @@ async def evaluate_candidate(candidate_data: CandidateData):
         # Restructure data to match the expected format
         restructured_data = {
             "resume_relevance_score": data_dict["resume_relevance_score"],
-            "skill_match": [0.5, 0.5],  # Default values since skills removed
-            "quiz_metrics": [data_dict["quiz_accuracy"]],  # Only quiz accuracy
-            "proctoring_metrics": [data_dict["proctor_suspicious_count"]],  # Only suspicious count
+            "quiz_metrics": [data_dict["quiz_accuracy"]],
+            # More suspicious activity must LOWER the score, so turn it into a compliance score
+            "proctoring_metrics": [1 - data_dict["proctor_suspicious_count"]],
             "interview_metrics": [data_dict["gaze_stability"], data_dict["expression_consistency"], data_dict["technical_depth_score"]]
         }
         

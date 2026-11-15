@@ -1,11 +1,13 @@
 from Test_Cheating_Detection.frame_analysis import process_directory
 import os
 
+# Extracted video frames live next to this file, so it works from any working directory
+FRAMES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frames")
+
 # New function to process a specific candidate's content
 def process_candidate_exam(candidate_name):
     # Create content path based on candidate name
-    path = "Test_Cheating_Detection\\frames" if os.name == "nt" else "Test_Cheating_Detection/frames"
-    content_path = os.path.join(path, candidate_name)
+    content_path = os.path.join(FRAMES_DIR, candidate_name)
     print(f"Processing content for candidate: {candidate_name} at {content_path}")
     # Process the directory
     result = process_directory(content_path)

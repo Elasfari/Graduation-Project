@@ -1,3 +1,4 @@
+from langchain_core.output_parsers import JsonOutputParser
 import os
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
@@ -95,7 +96,7 @@ def choose_best_candiate(job_description: str, top_k: int = 3) -> dict:
         return {"error": "No resumes found matching the job description."}
 
     summary = generate_summary(job_description, top_resumes)
-    parsed_output = json.loads(summary)
+    parsed_output = JsonOutputParser().parse(summary)  # tolerates ```json fences in the LLM reply
     target_id = parsed_output.get("best_candidate_id")
     result = next((item for item in top_resumes if item["ID"] == target_id), None)
     confidence_score = result["score"] if result else 0.0

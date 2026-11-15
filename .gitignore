@@ -12,3 +12,8 @@ interview_agent\__pycache__
 *.pyc
 **/__pycache__/
 questionss.json
+# personal data and local runtime state
+cv_agent/uploads/
+Test_Cheating_Detection/videos/
+Test_Cheating_Detection/frames/
+chatbot_agent/.langgraph_api/

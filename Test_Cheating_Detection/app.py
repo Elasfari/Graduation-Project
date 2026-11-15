@@ -1,17 +1,17 @@
-import time
+import re
 import shutil
 
 from fastapi import APIRouter, Form, UploadFile, File, HTTPException, FastAPI
 from fastapi.responses import JSONResponse
 import os
 import uuid
-from Test_Cheating_Detection.detection import process_candidate_exam
+from Test_Cheating_Detection.detection import FRAMES_DIR, process_candidate_exam
 from Test_Cheating_Detection.generate_pics_from_videos import extract_frames
 from fastapi.middleware.cors import CORSMiddleware
 
 router = APIRouter()
 
-VIDEO_DIR = "Test_Cheating_Detection\\videos"
+VIDEO_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "videos")
 os.makedirs(VIDEO_DIR, exist_ok=True)
 
 @router.post("/check-cheating/")
@@ -22,23 +22,20 @@ async def upload_video(file: UploadFile = File(...), candidate_name: str = Form(
 
     if ext not in allowed_extensions:
         raise HTTPException(status_code=400, detail="Unsupported video format.")
-    vid= candidate_name + ext
-    print(vid)
-    # Save with candidate name and UUID
-    save_path = os.path.join(VIDEO_DIR, f"{vid}")
-    print(save_path)
+    # candidate_name is used in file paths, so drop anything that could escape the folder (e.g. "../")
+    safe_name = re.sub(r"[^A-Za-z0-9_-]", "_", candidate_name)
+    save_path = os.path.join(VIDEO_DIR, safe_name + ext)
+    candidate_directory = os.path.join(FRAMES_DIR, safe_name)
     with open(save_path, "wb") as buffer:
         buffer.write(await file.read())
-    path = "Test_Cheating_Detection\\frames" if os.name == "nt" else "Test_Cheating_Detection/frames"
-    candidate_directory = os.path.join(path, candidate_name)
-    # Extract frames from the uploaded video
-    extract_frames(save_path, candidate_directory, 2)
-    time.sleep(2)
-    res=process_candidate_exam(candidate_name)
-    print(res)
-    time.sleep(3)
-    shutil.rmtree(path)
-    os.remove(save_path)
+
+    try:
+        # Sample one frame every 2 seconds, then run YOLO + MediaPipe on each frame
+        extract_frames(save_path, candidate_directory, 2)
+        res = process_candidate_exam(safe_name)
+    finally:
+        shutil.rmtree(candidate_directory, ignore_errors=True)
+        os.remove(save_path)
     return JSONResponse(content=res)
 
 app = FastAPI()

@@ -16,7 +16,7 @@ async def upload_pdf(
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
     
-    temp_path = f"temp_{id_key}.pdf"
+    temp_path = f"temp_{uuid.uuid4().hex}.pdf"  # never build file paths from user input
     with open(temp_path, "wb") as f:
         f.write(await file.read())
 

@@ -25,7 +25,7 @@ def classify_image(image_path):
 
         if detected_class == "person":
             people_count += 1
-        elif detected_class in ["laptop", "remote", "cell phone", "tvmonitor"]:
+        elif detected_class in ["laptop", "remote", "cell phone", "tv"]:  # YOLOv8 (COCO) class names
             communication_device_present = True
 
     direction_looking = "at-system"
@@ -75,9 +75,6 @@ def classify_image(image_path):
         "communication_device_present": communication_device_present,
         "image_path": image_path
     }
-    
-    cv2.imshow("name", image)
-    cv2.waitKey(1)  # Add small delay to show image
 
     return output  # Return dictionary instead of JSON string
 
@@ -103,8 +100,6 @@ def process_directory(directory_path):
             img_path = os.path.join(directory_path, img_name)
             result = classify_image(img_path)
             results_list.append(result)
-    
-    cv2.destroyAllWindows()  # Close any open windows when done
     return results_list
 
 # Example usage
