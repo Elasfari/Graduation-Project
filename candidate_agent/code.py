@@ -16,16 +16,12 @@ chat_model = ChatTogether(
 )
 
 # Initialize evaluation agent once (not per request)
-evaluation_agent = CandidateEvaluationAgent(
-    normalization_type="min_max",
-    decision_threshold=6.0
-)
+evaluation_agent = CandidateEvaluationAgent(decision_threshold=6.0)
 
 def validate_candidate_data(candidate_data: Dict[str, Any]) -> bool:
     """Validate required fields in candidate data"""
     required_fields = [
         'resume_relevance_score',
-        'skill_match', 
         'quiz_metrics',
         'proctoring_metrics',
         'interview_metrics'
@@ -82,7 +78,7 @@ def evaluate_candidate_with_model(candidate_data: dict) -> Dict[str, Any]:
         
         Resume Relevance: {candidate_data['resume_relevance_score']}/10
         Quiz Accuracy: {candidate_data['quiz_metrics'][0]:.2f}
-        Proctoring Suspicious Count: {candidate_data['proctoring_metrics'][0]:.2f}
+        Proctoring Compliance (1 = no suspicious activity): {candidate_data['proctoring_metrics'][0]:.2f}
         Interview Metrics:
         - Gaze Stability: {candidate_data['interview_metrics'][0]:.2f}
         - Expression Consistency: {candidate_data['interview_metrics'][1]:.2f}
@@ -91,7 +87,8 @@ def evaluate_candidate_with_model(candidate_data: dict) -> Dict[str, Any]:
         **Algorithmic Evaluation:**
         - Total Score: {algorithmic_score}/10
         - Decision: {decision}
-        - Component Scores: {component_scores}
+        - Component Scores (0-1): {component_scores}
+        - Component Weights: {evaluation_result['weights']}
         
         Please provide a comprehensive evaluation that considers both the raw data and the algorithmic assessment.
         """
@@ -110,16 +107,16 @@ def evaluate_candidate_with_model(candidate_data: dict) -> Dict[str, Any]:
             "algorithmic_score": algorithmic_score,
             "decision": decision,
             "component_scores": component_scores,
+            "weights": evaluation_result["weights"],
             "llm_evaluation": llm_result.content,
             "evaluation_summary": {
                 "final_score": algorithmic_score,
                 "recommendation": decision,
-                "confidence": "high" if abs(algorithmic_score - 6.0) > 1.0 else "medium",
-                "risk_factors": [
+                "confidence": "high" if abs(algorithmic_score - evaluation_agent.decision_threshold) > 1.0 else "medium",
+                "risk_factors": [risk for risk in [
                     "Low proctoring compliance" if any(score < 0.5 for score in candidate_data['proctoring_metrics']) else None,
-                    "Poor skill match" if any(score < 0.7 for score in candidate_data['skill_match']) else None,
                     "Weak interview performance" if any(score < 0.7 for score in candidate_data['interview_metrics']) else None
-                ]
+                ] if risk]
             }
         }
         

@@ -1,485 +1,155 @@
-# Graduate Project - AI-Powered Interview System
+# Pantheon: Agentic AI Recruitment Platform
 
-This project is a comprehensive AI-powered interview and candidate evaluation system built with FastAPI. It includes multiple agents for different aspects of the hiring process, leveraging advanced AI models for resume analysis, question generation, interview evaluation, and cheating detection.
+Pantheon automates the technical hiring funnel with **AI agents**. They screen resumes, generate a tailored exam, proctor it on video, analyse the interview and produce a final **explainable** hire/reject recommendation. A conversational recruiter assistant ties these steps together.
 
-## Features
+> Graduation project, Nile University, 2024–2025. This repository holds the FastAPI agents backend.
+>
+> 🎬 [Watch the demo video](https://nileuniversity-my.sharepoint.com/:v:/g/personal/s_aboalyazeed2141_nu_edu_eg/EdV6ruQeebNIgy6Ibr9lPn4Bo98JCHLa_MxmgGxEKWjAQg?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=x6X2hd)
 
-- **CV Agent**: Upload and analyze resumes using Pinecone vector database, automatically select best candidates
-- **Exam Generation Agent**: Generate technical questions tailored to specific job requirements
-- **Interview Agent**: Transcribe audio recordings and provide detailed technical evaluation of candidate responses
-- **Proctor Agent**: Real-time video analysis for cheating detection using YOLO and MediaPipe
-
-
-## Video 
-you can find our video in this link
-[![Watch the video](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAP8AAADGCAMAAAAqo6adAAAABlBMVEUAAAAORKmU5gWIAAAA3klEQVR4nO3PAQEAAAjDoNu/tEEYDdjN1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W39bf1t/W34b/H769AMf5McvaAAAAAElFTkSuQmCC)](https://nileuniversity-my.sharepoint.com/:v:/g/personal/s_aboalyazeed2141_nu_edu_eg/EdV6ruQeebNIgy6Ibr9lPn4Bo98JCHLa_MxmgGxEKWjAQg?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=x6X2hd)
-
-
-
-## Prerequisites
-
-- Python 3.8 or higher
-- Conda (Anaconda or Miniconda)
-- OpenAI API key
-- Pinecone API key
-
-## Installation
-
-1. **Clone the repository** (if not already done):
-   ```bash
-   git clone <your-repository-url>
-   cd <repository-name>
-   ```
-
-2. **Create and activate the conda environment**:
-   ```bash
-   conda env create -f environment.yml
-   conda activate grad-project
-   ```
-
-3. **Set up API keys**:
-   - Configure your OpenAI and Pinecone API keys in the respective modules
-   - Required for CV agent and Interview agent functionality
-
-## Running the Application
-
-1. **Start the FastAPI server**:
-   ```bash
-   python app.py
-   ```
-
-2. **Access the application**:
-   - The server will start on `http://localhost:8000`
-   - Interactive API documentation is available at `http://localhost:8000/docs`
-   - Alternative docs at `http://localhost:8000/redoc`
-
-## API Endpoints
-
-### CV Agent (`/cv-agent`)
-
-#### 1. Upload Resume to Pinecone
-**Endpoint:** `POST /cv-agent/upload-resume_to_pinecone/`
-
-**Purpose:** Upload a PDF resume and index it in Pinecone vector database for semantic search.
-
-**Parameters:**
-- `file` (form-data): PDF file containing the resume
-- `id_key` (form-data): Unique identifier for the candidate
-
-**Request Example:**
-```bash
-curl -X POST "http://localhost:8000/cv-agent/upload-resume_to_pinecone/" \
-     -F "file=@john_doe_resume.pdf" \
-     -F "id_key=candidate_001"
-```
-
-**Response:**
-```json
-{
-  "message": "Resume uploaded and indexed successfully.",
-  "pinecone_id": "candidate_001"
-}
-```
-
-**Features:**
-- Extracts text from PDF using advanced parsing
-- Validates PDF format and text content
-- Indexes resume content in Pinecone for semantic search
-- Temporary file handling with automatic cleanup
-
-#### 2. Choose Best Resume
-**Endpoint:** `POST /cv-agent/choose_best_resume/`
-
-**Purpose:** Analyze job description and return the best matching candidate from indexed resumes.
-
-**Request Body:**
-```json
-{
-  "job_description": "We are looking for a Python developer with 3+ years of experience in web development, familiar with FastAPI, PostgreSQL, and cloud deployment."
-}
-```
-
-**Request Example:**
-```bash
-curl -X POST "http://localhost:8000/cv-agent/choose_best_resume/" \
-     -H "Content-Type: application/json" \
-     -d '{"job_description": "Python developer with FastAPI experience"}'
-```
-
-**Response:**
-```json
-{
-  "best_candidate_id": "candidate_001",
-  "best_candidate_name": "John Doe",
-  "reason": "Strong match with 4 years Python experience, extensive FastAPI knowledge, and proven cloud deployment skills with AWS. Educational background in Computer Science aligns perfectly with technical requirements."
-}
-```
-
-**Features:**
-- Uses GPT-4 for intelligent candidate matching
-- Performs semantic search across all indexed resumes
-- Provides detailed reasoning for candidate selection
-- Considers skills, experience, and educational background
-#### 3. Generate Job Details
-**Endpoint:** `POST /cv-agent/generate_job_details/`
-
-**Purpose:** Generate comprehensive job descriptions and requirements based on basic job information.
-
-**Request Body:**
-```json
-{
-  "job_title": "Data Engineer",
-  "department": "Engineering",
-  "employment_type": "Full-time",
-  "experience_level": "Mid-level"
-}
-```
-
-**Request Example:**
-```bash
-curl -X POST "http://localhost:8000/cv-agent/generate_job_details/" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "job_title": "Data Engineer",
-       "department": "Engineering",
-       "employment_type": "Full-time",
-       "experience_level": "Mid-level"
-     }'
-```
-
-**Response:**
-```json
-{
-  "job_description": "We are seeking a skilled Mid-level Data Engineer to join our Engineering team...",
-  "responsibilities": [
-    "Design, build, and maintain robust, scalable data pipelines",
-    "Develop and optimize ETL processes",
-    "Collaborate with data scientists and analysts"
-  ],
-  "requirements": "Bachelor's degree in Computer Science, Engineering...",
-}
-```
-
-**Features:**
-- AI-powered job description generation
-- Detailed responsibility mapping
-- Customizable requirements based on experience level
-- Industry-specific skill recommendations
-
-### Exam Generation Agent (`/exam-generation-agent`)
-
-#### Generate Questions
-**Endpoint:** `POST /exam-generation-agent/generate-questions`
-
-**Purpose:** Generate technical interview questions tailored to specific job requirements and difficulty levels.
-
-**Request Body:**
-```json
-{
-  "job_description": "Senior Python Developer",
-  "num_questions": 5,
-}
-```
-
-**Request Example:**
-```bash
-curl -X POST "http://localhost:8000/exam-generation-agent/generate-questions" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "job_description": "Python Developer with Django experience",
-       "num_questions": 3
-     }'
-```
-
-**Response:**
-```json
-{
-  "questions": [
-    "Explain the difference between asyncio and threading in Python",
-    "How would you optimize a slow database query?"
-  ],
-  "answers": [
-    "asyncio is for I/O-bound concurrency using coroutines and event loops, while threading uses OS threads for parallel execution",
-    "Use indexes, query optimization, connection pooling, and caching strategies"
-  ],
-  "types": [
-        "coding",
-        "essay",
-        "true_false"
-    ],
-    "difficulties": [
-        "hard",
-        "hard",
-        "medium"
-    ],
-    "domains": [
-        "Deep Learning",
-        "machine learning",
-        "AI Ethics"
-    ]
-}
-```
-
-### Interview Agent (`/interview-agent`)
-
-#### 1. Transcribe Audio
-**Endpoint:** `POST /interview-agent/transcribe-audio`
-
-**Purpose:** Convert audio recordings of interviews to text using advanced speech-to-text technology.
-
-**Parameters:**
-- `file` (form-data): Audio file (.mp3, .wav, .m4a formats supported)
-- `candidate_id` (form-data): Unique identifier for the candidate
-
-**Request Example:**
-```bash
-curl -X POST "http://localhost:8000/interview-agent/transcribe-audio" \
-     -F "file=@interview_recording.m4a" \
-     -F "candidate_id=candidate_001"
-```
-
-**Response:**
-```json
-{
-  "transcription": "123 TEST."
-}
-```
-
-#### 2. Evaluate Interview
-**Endpoint:** `POST /interview-agent/evaluate-exam`
-
-**Purpose:** Provide comprehensive technical evaluation of candidate responses using AI analysis.
-
-**Request Body:**
-```json
-{
-  "questions": [
-    "Explain the difference between asyncio and threading in Python",
-    "How would you optimize a slow database query?"
-  ],
-  "golden_answers": [
-    "asyncio is for I/O-bound concurrency using coroutines and event loops, while threading uses OS threads for parallel execution",
-    "Use indexes, query optimization, connection pooling, and caching strategies"
-  ],
-  "candidate_answers": [
-    "asyncio lets you write concurrent code with coroutines and the event loop",
-    "Indexes speed up queries and you can use connection pooling"
-  ]
-}
-```
-
-**Response:**
-```json
-{
-  "questions_evaluated": 
-    { 
-            "question": "questions[i]",
-            "golden_answer": "golden_answers[i]",
-            "candidate_answer": "candidate_answers[i]",
-            "evaluation" : "explanation[i]"
-        }
-      ,
-    
-  
-  "exam_summary": "Candidate demonstrates solid foundational knowledge with room for deeper technical understanding. Strong in basic concepts but needs improvement in comparative analysis.",
-  "final_grade": 75.5,
-  "recommendation": "Consider for junior-mid level position with mentoring"
-}
-```
-
-**Features:**
-- Individual question evaluation with detailed feedback
-- Overall exam summary and grading
-- Identifies strengths and improvement areas
-- Provides hiring recommendations
-
-#### 3. emaraty part (interview analysis)
-
-### Proctor Agent (`/proctor-agent`)
-
-#### Check Cheating
-**Endpoint:** `POST /proctor-agent/check-cheating/`
-
-**Purpose:** Analyze video recordings to detect potential cheating behaviors during exams using computer vision.
-
-**Parameters:**
-- `file` (form-data): Video file of the exam session
-- `candidate_name` (form-data): Name of the candidate being monitored
-
-**Request Example:**
-```bash
-curl -X POST "http://localhost:8000/proctor-agent/check-cheating/" \
-     -F "file=@exam_session.mp4" \
-     -F "candidate_name=john_doe"
-```
-
-**Response:**
-```json
-{
-    "Candidate": "ss",
-    "Phone usage detected": 2,
-    "Frames with phone detection": [
-        "frame_0007.jpg",
-        "frame_0008.jpg"
-    ],
-    "People detected (more than 1)": 0,
-    "Frames with multiple people detection": [],
-    "People count changes detected": 0,
-    "Total frames processed": 10
-}
-```
-
-**Detection Features:**
-- **Head Pose Estimation**: Tracks unusual head movements and orientations
-- **Device Detection**: Identifies phones, tablets, and other electronic devices
-- **Gaze Analysis**: Monitors eye movement patterns
-- **Multiple Person Detection**: Alerts if additional people enter the frame
-- **Audio Analysis**: Detects unusual sounds or conversations
-
-**Supported Formats:**
-- Video: .mp4, .mov, .avi, .mkv
-- Resolution: Up to 4K
-- Duration: Up to 2 hours per session
-
-## Project Structure
-
-```
-├── app.py                          # Main FastAPI application with router integration
-├── environment.yml                 # Conda environment configuration with all dependencies
-├── phone.mp4                       # Sample video for testing cheating detection
-├── WIN_20250502_18_19_02_Pro.mp4  # Additional test video
-├── yolov8l.pt                      # Pre-trained YOLO model for object detection
-│
-├── candiate_eval/                  # CV processing and candidate evaluation
-│   ├── agent.py                    # Core AI agent for resume analysis
-│   ├── app.py                      # FastAPI router for CV endpoints
-│   ├── cv_processor.py             # PDF processing and Pinecone integration
-│   └── uploads/                    # Temporary storage for uploaded files
-│
-├── question_and_answer_agent/      # Intelligent question generation system
-│   └── app.py                      # FastAPI router for question generation
-│
-├── interview_agent/                # Interview processing and evaluation
-│   ├── app.py                      # FastAPI router for interview endpoints
-│   ├── speech_to_text.py           # Audio transcription functionality
-│   ├── technical_depth_analysis.py # AI-powered answer evaluation
-│   ├── exam_results.json           # Sample evaluation results
-│   ├── qa_pairs.json               # Question-answer pairs database
-│   └── Recording.m4a               # Sample audio file
-│
-├── Test_Cheating_Detection/        # Advanced video-based proctoring system
-│   ├── app.py                      # FastAPI router for proctoring
-│   └── README.md                   # Detailed documentation for cheating detection
-│
-└── grad_project/                   # Research and development resources
-    ├── data_prep_for_medical_question_training.ipynb
-    ├── fake_cv_detection.py        # CV authenticity verification
-    ├── lora_finetune.ipynb         # Model fine-tuning experiments
-    ├── prompt_eng.py               # Prompt engineering utilities
-    └── stt.py                      # Speech-to-text experimentation
-```
-
-## Usage Examples
-
-### Complete Interview Workflow
-
-1. **Upload candidate resumes:**
-```bash
-curl -X POST "http://localhost:8000/cv-agent/upload-resume_to_pinecone/" \
-     -F "file=@candidate1.pdf" -F "id_key=cand_001"
-```
-
-2. **Find best candidate:**
-```bash
-curl -X POST "http://localhost:8000/cv-agent/choose_best_resume/" \
-     -H "Content-Type: application/json" \
-     -d '{"job_description": "Senior Python Developer with 5+ years experience"}'
-```
-
-3. **Generate interview questions:**
-```bash
-curl -X POST "http://localhost:8000/exam-generation-agent/generate-questions" \
-     -H "Content-Type: application/json" \
-     -d '{"job_description": "Senior Python Developer", "num_questions": 5}'
-```
-
-4. **Transcribe interview audio:**
-```bash
-curl -X POST "http://localhost:8000/interview-agent/transcribe-audio" \
-     -F "file=@interview.m4a" -F "candidate_id=cand_001"
-```
-
-5. **Evaluate responses:**
-```bash
-curl -X POST "http://localhost:8000/interview-agent/evaluate" \
-     -H "Content-Type: application/json" \
-     -d '{"questions": ["..."], "golden_answers": ["..."], "candidate_answers": ["..."]}'
-```
-
-6. **Monitor for cheating:**
-```bash
-curl -X POST "http://localhost:8000/proctor-agent/check-cheating/" \
-     -F "file=@exam_video.mp4" -F "candidate_name=john_doe"
-```
-
-## Technical Specifications
-
-### AI Models Used
-- **OpenAI GPT-4**: For resume analysis and answer evaluation
-- **YOLO v8**: For object detection in video streams
-- **MediaPipe**: For pose estimation and facial analysis
-- **Pinecone**: Vector database for semantic resume search
-
-### Performance Metrics
-- **Resume Processing**: ~2-3 seconds per PDF
-- **Question Generation**: ~5-10 seconds for 5 questions
-- **Audio Transcription**: Real-time (1x speed)
-- **Video Analysis**: ~0.5x speed (2-minute video takes ~4 minutes)
-
-### Rate Limiting
-- Some endpoints implement 2-3 second delays to prevent API abuse
-- Concurrent request handling with FastAPI's async capabilities
-
-## Development
-
-### Running Individual Modules
-```bash
-# CV Agent only
-cd candiate_eval && python app.py
-
-# Question Generator only
-cd question_and_answer_agent && python app.py
-
-# Interview Agent only
-cd interview_agent && python app.py
-
-# Proctoring Agent only
-cd Test_Cheating_Detection && python app.py
-```
-
-
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Environment Setup**
-   ```bash
-   # If conda environment creation fails
-   conda clean --all
-   conda env create -f environment.yml --force
-   ```
-
-
-
-
-
-
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+**Stack:** Python · FastAPI · LangChain / LangGraph · OpenAI GPT-4.1-mini · Pinecone · Whisper · ElevenLabs · YOLOv8 · MediaPipe · DeepFace · Mistral Pixtral · Llama 3.3 70B · Supabase
 
 ---
 
-For detailed information about individual components, check the respective module directories and their documentation.
+## The problem
+
+Screening technical candidates is slow and inconsistent. Recruiters read hundreds of resumes and write a new exam for every role. Online exams are easy to cheat on, and interview feedback is subjective. Pantheon gives each step to a specialised agent and combines their outputs into one transparent score that a recruiter can audit.
+
+## How a candidate moves through Pantheon
+
+```mermaid
+flowchart LR
+    A["Resume upload"] --> B["CV Agent<br/>match resumes to the job"]
+    B --> C["Exam Agent<br/>generate a tailored exam"]
+    C --> D["Proctor Agent<br/>watch the exam video"]
+    D --> E["Interview Agent<br/>grade answers, speech, emotion"]
+    E --> F["Candidate Agent<br/>weighted score + explanation"]
+    F --> G{"score ≥ 6 / 10"}
+    G -- yes --> H["Shortlisted"]
+    G -- no --> I["Rejected"]
+```
+
+## Architecture
+
+```mermaid
+flowchart LR
+    W["Web app<br/>(Next.js + Supabase)"] --> BE["FastAPI backend<br/>app.py"]
+    R["Recruiter chat"] --> CB["Chatbot Agent<br/>LangGraph ReAct"]
+    CB -- "tools" --> BE
+    CB --> SB[("Supabase")]
+    BE --> CV["CV Agent"]
+    BE --> EX["Exam Agent"]
+    BE --> IV["Interview Agent"]
+    BE --> PR["Proctor Agent"]
+    BE --> CA["Candidate Agent"]
+    CV & EX --> PC[("Pinecone<br/>vector DB")]
+    CV & EX & IV & CB --> OAI["GPT-4.1-mini"]
+    IV --> SP["Whisper · ElevenLabs<br/>DeepFace · Pixtral-12B"]
+    PR --> VI["YOLOv8 · MediaPipe"]
+    CA --> LL["Llama 3.3 70B"]
+```
+
+## The agents
+
+| Agent | What it does | How it works |
+|---|---|---|
+| **CV Agent** | Picks the best resume for a job and drafts job descriptions | Resumes are stored in a Pinecone index with built-in embeddings. A job description retrieves the top 3 by semantic similarity. GPT-4.1-mini picks one, explains why, and extracts the candidate's name and email. The Pinecone similarity score is returned as the confidence. |
+| **Exam Agent** | Builds an exam tailored to the job | A question bank (4 types × 3 difficulties × 10 domains) was generated offline with GPT-4.1-mini and indexed in Pinecone. For each request the LLM reads the job description and infers metadata filters (type, difficulty, domain) plus 6 search queries. Pinecone runs filtered semantic search, and duplicates are removed. This is retrieval-augmented generation driven by an agent. |
+| **Interview Agent** | Runs and analyses the interview | ElevenLabs reads the questions aloud and Whisper transcribes the answers. GPT-4.1-mini grades each answer against a golden answer (*Correct / Partially correct / Incorrect*, with reasoning). The video is also analysed: DeepFace measures the emotion distribution across frames, an LLM analyses sentiment in the transcript, and Pixtral-12B writes a behavioural summary. These are merged into one report. |
+| **Proctor Agent** | Flags cheating in exam videos | Samples one frame every 2 s. YOLOv8 counts people and detects phones, laptops and screens. It reports phone frames, frames with more than one person, and changes in the number of people. |
+| **Candidate Agent** | Makes the final, explainable decision | A weighted formula produces the score and decision (below). Llama 3.3 70B writes a narrative assessment. |
+| **Chatbot Agent** | Recruiter assistant | A LangGraph ReAct agent with tools to create jobs, generate and save exams, and select the best candidate. It calls the other agents and Supabase on the recruiter's behalf. |
+
+## Explainable scoring
+
+The final decision comes from a **simple formula, not from the LLM**. A recruiter can trace every candidate's result back to the inputs. The LLM only *explains* the result and never changes it.
+
+Each stage is turned into a 0–1 score where higher is better:
+
+| Component | Input | Converted to 0–1 by | Weight |
+|---|---|---|---|
+| Resume relevance | 0–10 | ÷ 10 | 0.1 → **14%** |
+| Quiz | quiz accuracy (0–1) | as is | 0.1 → **14%** |
+| Proctoring | share of suspicious activity (0–1) | 1 − value | 0.1 → **14%** |
+| Interview | gaze stability, expression consistency, technical depth | average | 0.4 → **57%** |
+
+```
+score    = 10 × Σ (weightᵢ × componentᵢ) / Σ weightᵢ        (0–10)
+decision = "Shortlisted" if score ≥ 6.0 else "Rejected"
+```
+
+**Worked example:** resume 8/10, quiz 0.9, suspicious activity 0.1, interview (0.7, 0.8, 0.6)
+→ components 0.8, 0.9, 0.9, 0.7 → **score 7.71 → Shortlisted**.
+
+The response contains the component scores, the effective weights, a confidence level (*high* when the score is more than 1 point away from the threshold), and risk flags such as "Low proctoring compliance". The rules are pinned down by unit tests in [`candidate_agent/test_scoring.py`](candidate_agent/test_scoring.py).
+
+## API
+
+All routes are mounted in `app.py`. Interactive docs are at `http://localhost:8000/docs`.
+
+| Endpoint | Input | Purpose |
+|---|---|---|
+| `POST /cv-agent/upload-resume_to_pinecone/` | form: `file` (PDF), `id_key` | Index a resume |
+| `POST /cv-agent/choose_best_resume/` | `{job_description}` | Best resume, reason, confidence |
+| `POST /cv-agent/generate_job_details/` | `{job_title, department, employment_type, experience_level}` | Draft a job description |
+| `POST /exam-generation-agent/generate-questions` | `{job_description, num_questions}` | Questions, golden answers, types, difficulties, domains |
+| `POST /interview-agent/text-to-speech` | `{text}` | Base64 audio of a question |
+| `POST /interview-agent/transcribe-audio` | form: `file` | Whisper transcription |
+| `POST /interview-agent/evaluate-exam` | `{question_list, golden_answer_list, answer_list}` | Per-answer verdicts, summary, grade % |
+| `POST /interview-agent/emotional-analysis` | form: `file` (video) | Emotion and stress summary |
+| `POST /interview-agent/interview-analysis` | form: `file` (video) | Full interview report (speech + sentiment + emotion) |
+| `POST /proctor-agent/check-cheating/` | form: `file` (video), `candidate_name` | Phone / extra-person detections |
+| `POST /candidate-agent/evaluate_candidate/` | scores from the stages above | Final score, decision, weights, LLM explanation |
+
+Example of the final decision:
+
+```bash
+curl -X POST http://localhost:8000/candidate-agent/evaluate_candidate/ \
+     -H "Content-Type: application/json" \
+     -d '{"resume_relevance_score": 8, "quiz_accuracy": 0.9, "proctor_suspicious_count": 0.1,
+          "gaze_stability": 0.7, "expression_consistency": 0.8, "technical_depth_score": 0.6}'
+```
+```json
+{
+  "algorithmic_score": 7.71,
+  "decision": "Shortlisted",
+  "component_scores": { "resume_relevance": 0.8, "quiz": 0.9, "proctoring": 0.9, "interview": 0.7 },
+  "weights": { "resume_relevance": 0.143, "quiz": 0.143, "proctoring": 0.143, "interview": 0.571 },
+  "llm_evaluation": "Strengths: ... Weaknesses: ... Next steps: ...",
+  "evaluation_summary": { "confidence": "high", "risk_factors": [] }
+}
+```
+
+## Run it locally
+
+You need Python 3.11 and API keys for OpenAI, Pinecone, Together AI, Mistral and ElevenLabs. The chatbot also needs a Supabase project.
+
+```bash
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt     # or on Windows: conda env create -f environment.yml
+cp .env.example .env                # then fill in your keys
+python app.py                       # http://localhost:8000/docs
+```
+
+**Tests:** `python -m pytest candidate_agent/test_scoring.py`
+
+## Project structure
+
+```
+├── app.py                       mounts every agent router
+├── cv_agent/                    resume indexing, matching, job descriptions
+├── question_and_answer_agent/   Exam Agent + offline question-bank tooling
+├── interview_agent/             speech, answer grading, emotion + sentiment reports
+├── Test_Cheating_Detection/     Proctor Agent (frame sampling, YOLOv8, MediaPipe)
+├── candidate_agent/             explainable scoring + tests
+└── chatbot_agent/               LangGraph recruiter assistant
+```
+
+## Known limitations
+
+- Emotion recognition is noisy and can be biased across faces and cultures. Its output should support a human reviewer, never replace one.
+- The Proctor Agent checks one frame every 2 seconds and does not track gaze.
+- The Pinecone index host is hardcoded in the CV and Exam agents. Point it at your own index.
+
+## Credits
+
+The Proctor Agent's frame analysis is adapted from [akshaysatyam2/Test-Cheating-Detection](https://github.com/akshaysatyam2/Test-Cheating-Detection).

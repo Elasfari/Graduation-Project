@@ -1,1 +1,36 @@
-python-dotenv==1.0.0
+# Cross-platform install for the agents backend (Python 3.11).
+# Versions match the original environment.yml (a Windows-only conda export);
+# the unpinned ones were imported by the code but missing from it.
+fastapi==0.115.14
+uvicorn==0.35.0
+python-multipart==0.0.20
+pydantic==2.11.4
+numpy==1.26.4
+tqdm==4.67.1
+tenacity==9.1.2
+
+# LLMs, agents and vector search
+langchain==0.3.26
+langchain-core==0.3.66
+langchain-openai==0.3.16
+langchain-together==0.3.0
+langgraph==0.4.1
+pinecone==7.3.0
+pymupdf==1.26.1
+
+# Speech and vision
+openai-whisper==20250625
+torch==2.2.2
+torchvision==0.17.2
+opencv-python==4.11.0.86
+ultralytics==8.3.82
+mediapipe==0.10.21
+
+python-dotenv
+deepface
+mistralai
+langchain-community
+elevenlabs
+fpdf2
+reportlab
+requests
